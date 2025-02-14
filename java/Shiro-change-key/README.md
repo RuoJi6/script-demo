@@ -1,4 +1,4 @@
-shiro 修改key
+shiro cbc 修改key
 ```shell
 java -jar shiroattack-1.0-SNAPSHOT.jar -d kPH+bIxk5D2deZiIxcaaaA==
 java -jar shiroattack-1.0-SNAPSHOT.jar
