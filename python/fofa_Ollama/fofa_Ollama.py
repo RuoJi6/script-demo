@@ -29,7 +29,10 @@ from datetime import datetime
 import requests
 import argparse
 import os
+import urllib3
 
+# 禁用 InsecureRequestWarning 警告
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 fofa_key = "" # fofa_key 需要配置这个key!!!!!!!!!!!!!!!!!!!!!!!!!
 
