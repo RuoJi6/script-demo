@@ -128,7 +128,7 @@ def fofa_check(fofa_data):
     file_time_name = formatted_time()+".txt"
     for url in fofa_data:
         try:
-            fofa_url_data = requests.get(url=url + "/api/tags", timeout=30)
+            fofa_url_data = requests.get(url=url + "/api/tags", timeout=30, verify=False)
             fofa_url_data_json = fofa_url_data.json()
             if len(fofa_url_data_json['models']):
                 print(f"[{Colorpr.color_red('+')}]Ollama: "+ url + " 模型数量：" +str(len(fofa_url_data_json['models'])))
