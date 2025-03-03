@@ -1,3 +1,4 @@
+参考：https://mp.weixin.qq.com/s/3wWZGIzvric-qhIXaWR7GQ
 使用cherry Studio导入地址，点击管理添加模型
 <img width="1080" alt="image" src="https://github.com/user-attachments/assets/4631d3b6-413d-42f4-b231-60bc930bd7c2" />
 选择，切换模型
