@@ -48,7 +48,7 @@
 ### 1. 下载脚本
 ```bash
 git clone https://github.com/RuoJi6/script-demo.git
-cd script-demo
+cd script-demo/python/extract_keys/
 ```
 
 ### 2. 修改extract_keys.py
