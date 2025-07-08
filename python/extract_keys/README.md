@@ -24,7 +24,7 @@ Github: https://github.com/RuoJi6/script-demo
 
 版本: 1.0
 
-使用，修改main中的search_directory指向指定小程序反后的文件
+使用，修改main中的search_directory指向指定小程序反后的目录
 ```python
 if __name__ == "__main__":
     main(search_directory = "/xxxx/xxxx/xxxx/") # search_directory小程序路径
