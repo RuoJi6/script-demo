@@ -1,37 +1,51 @@
-# 正则匹配小程序加密算法
-1. 多种加密算法支持 :
-   - AES, DES, 3DES, RSA
-   - MD5, SHA1, SHA256, SHA512
-   - HMAC, Base64, JWT
-   - 加密模式和填充方式
-2. 行号显示 : 每个发现都包含具体的行号信息
-3. 详细上下文 : 保存完整的代码行内容和位置信息
-4. AI友好输出 :
+# 小程序加密算法检测工具
 
-   - 生成 crypto_analysis_detailed.txt 包含所有详细信息
-   - 格式化输出便于AI分析
-   - 包含文件路径和行号定位
-5. 分类整理 : 按加密类型分类显示结果
-6. 扩展文件类型 : 支持更多编程语言文件
+一个用于检测和分析小程序中加密算法使用情况的Python脚本工具。
 
-现在运行脚本后，会生成详细的分析文件，您可以直接将其内容提供给AI进行进一步的加密信息分析和识别。
+## 功能特性
 
-作者: ruoji
+### 🔍 多种加密算法支持
+- **对称加密**: AES, DES, 3DES
+- **非对称加密**: RSA
+- **哈希算法**: MD5, SHA1, SHA256, SHA512
+- **其他**: HMAC, Base64, JWT
+- **加密模式和填充方式**: CBC, ECB, PKCS7等
 
-时间: 2025-07-08
+### 📍 精确定位
+- **行号显示**: 每个发现都包含具体的行号信息
+- **详细上下文**: 保存完整的代码行内容和位置信息
+- **文件路径**: 完整的文件路径定位
 
-Github: https://github.com/RuoJi6/script-demo
+### 🤖 AI友好输出
+- 生成 `crypto_analysis_detailed.txt` 包含所有详细信息
+- 生成 `crypto_analysis_summary.txt` 包含摘要信息
+- 格式化输出便于AI分析和二次处理
+- 包含具体的加密使用代码片段
 
-版本: 1.0
+### 📂 广泛文件支持
+支持多种编程语言文件类型：
+- JavaScript (.js)
+- TypeScript (.ts)
+- Python (.py)
+- Java (.java)
+- C/C++ (.c, .cpp, .h)
+- JSON (.json)
+- 文本文件 (.txt)
 
-使用，修改main中的search_directory指向指定小程序反后的目录
-```python
-if __name__ == "__main__":
-    main(search_directory = "/xxxx/xxxx/xxxx/") # search_directory小程序路径
-```
+### 🗂️ 智能分类
+- 按加密类型分类显示结果
+- 密钥和IV自动识别
+- 加密模式配置提取
+- 结果去重和过滤
 
+## 安装要求
 
-运行
-``shell
-python3 extract_keys.py
-``
+- Python 3.6+
+- 无需额外依赖包（使用Python标准库）
+
+## 使用方法
+
+### 1. 下载脚本
+```bash
+git clone https://github.com/RuoJi6/script-demo.git
+cd script-demo
