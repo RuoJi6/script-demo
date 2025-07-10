@@ -53,8 +53,7 @@ cd script-demo/python/extract_keys/
 
 ### 2. 修改extract_keys.py
 ```python
-if __name__ == "__main__":
-    main(search_directory="/path/to/your/miniprogram/directory")  # 替换为您的小程序目录路径
+FILENAME = "" #文件绝对路径
 ```
 
 ### 3. 运行
