@@ -2,16 +2,20 @@
 # -*- coding: utf-8 -*-
 """
 PHP鉴权脚本检测工具
-检测PHP文件中是否包含 include_once( "inc/auth.php" ); 语句
-如果不存在则记录文件路径
+检测PHP文件中是否包含指定的鉴权字符串
+支持多个鉴权字符串检测，如果都不存在则记录文件路径
 """
 
 import os
 import sys
 from pathlib import Path
 
-# 全局配置：要检测的鉴权脚本字符串（用户可根据需要修改）
-TARGET_AUTH_STRING = 'include_once( "inc/auth.php" );'
+# 全局配置：要检测的鉴权脚本字符串列表（用户可根据需要修改）
+TARGET_AUTH_STRINGS = [
+    'extends apiAction',
+    'extends Action',
+    # 可以添加更多鉴权字符串
+]
 
 # PHP代码审计敏感函数分类
 SENSITIVE_FUNCTIONS = {
@@ -52,7 +56,6 @@ SENSITIVE_FUNCTIONS = {
     ]
 }
 
-
 def check_auth_and_sensitive_functions(file_path):
     """
     检查PHP文件是否包含鉴权脚本引用和敏感函数
@@ -69,8 +72,8 @@ def check_auth_and_sensitive_functions(file_path):
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             content = f.read()
 
-        # 检查是否包含鉴权脚本
-        has_auth = TARGET_AUTH_STRING in content
+        # 检查是否包含任何一个鉴权脚本字符串
+        has_auth = any(auth_string in content for auth_string in TARGET_AUTH_STRINGS)
 
         # 检查敏感函数
         sensitive_functions_found = {}
@@ -173,33 +176,33 @@ def main():
     """主函数"""
     print("PHP鉴权脚本和敏感函数检测工具")
     print("=" * 40)
-
+    
     # 获取用户输入的目录
     while True:
         target_dir = input("请输入要检测的目录路径: ").strip()
-
+        
         if not target_dir:
             print("目录路径不能为空，请重新输入。")
             continue
-
+            
         if not os.path.exists(target_dir):
             print(f"目录 '{target_dir}' 不存在，请检查路径是否正确。")
             continue
-
+            
         if not os.path.isdir(target_dir):
             print(f"'{target_dir}' 不是一个目录，请输入正确的目录路径。")
             continue
-
+            
         break
-
+    
     # 设置输出文件名
     output_file = "auth_check_report.txt"
-
+    
     # 询问是否自定义输出文件名
     custom_output = input(f"输出文件名 (默认: {output_file}): ").strip()
     if custom_output:
         output_file = custom_output
-
+    
     # 开始扫描
     try:
         scan_directory(target_dir, output_file)
