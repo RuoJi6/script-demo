@@ -12,10 +12,20 @@ from pathlib import Path
 
 # 全局配置：要检测的鉴权脚本字符串列表（用户可根据需要修改）
 TARGET_AUTH_STRINGS = [
-    'extends apiAction',
-    'extends Action',
+    'chksession()',
+    # 'extends Action',
     # 可以添加更多鉴权字符串
 ]
+
+# 额外检测条件配置（与敏感函数是"且"关系）
+ADDITIONAL_CONDITIONS = {
+    "接受参数": [
+        "$_GET", "$_POST", "$_REQUEST"
+    ]
+    # 可以添加更多条件，如：
+    # "数据库连接": ["mysql_connect", "mysqli_connect"],
+    # "文件写入": ["fwrite", "file_put_contents"]
+}
 
 # PHP代码审计敏感函数分类
 SENSITIVE_FUNCTIONS = {
@@ -56,6 +66,7 @@ SENSITIVE_FUNCTIONS = {
     ]
 }
 
+
 def check_auth_and_sensitive_functions(file_path):
     """
     检查PHP文件是否包含鉴权脚本引用和敏感函数
@@ -77,15 +88,63 @@ def check_auth_and_sensitive_functions(file_path):
 
         # 检查敏感函数
         sensitive_functions_found = {}
+        lines = content.split('\n')
+
         for category, functions in SENSITIVE_FUNCTIONS.items():
             found_functions = []
             for func in functions:
                 if func in content:
-                    found_functions.append(func.rstrip('('))
+                    # 查找包含该函数的所有行
+                    func_lines = []
+                    for i, line in enumerate(lines, 1):
+                        if func in line:
+                            func_lines.append({
+                                'line_number': i,
+                                'code': line.strip()
+                            })
+
+                    found_functions.append({
+                        'function': func.rstrip('('),
+                        'occurrences': func_lines
+                    })
+
             if found_functions:
                 sensitive_functions_found[category] = found_functions
 
-        return has_auth, sensitive_functions_found
+        # 检查额外条件（与敏感函数是"且"关系）
+        additional_conditions_met = True
+        additional_conditions_found = {}
+
+        for condition_name, condition_items in ADDITIONAL_CONDITIONS.items():
+            if condition_items:  # 如果条件列表不为空
+                found_items = []
+                for item in condition_items:
+                    if item in content:
+                        # 查找包含该条件的所有行
+                        item_lines = []
+                        for i, line in enumerate(lines, 1):
+                            if item in line:
+                                item_lines.append({
+                                    'line_number': i,
+                                    'code': line.strip()
+                                })
+
+                        found_items.append({
+                            'item': item,
+                            'occurrences': item_lines
+                        })
+
+                if found_items:
+                    additional_conditions_found[condition_name] = found_items
+                else:
+                    additional_conditions_met = False
+
+        # 如果敏感函数存在但额外条件不满足，则清空敏感函数结果
+        if sensitive_functions_found and not additional_conditions_met:
+            sensitive_functions_found = {}
+            additional_conditions_found = {}
+
+        return has_auth, sensitive_functions_found, additional_conditions_found
 
     except Exception as e:
         print(f"读取文件 {file_path} 时出错: {e}")
@@ -116,7 +175,7 @@ def scan_directory(directory, output_file):
                 total_php_files += 1
 
                 # 检查鉴权和敏感函数
-                has_auth, sensitive_functions = check_auth_and_sensitive_functions(file_path)
+                has_auth, sensitive_functions, additional_conditions = check_auth_and_sensitive_functions(file_path)
 
                 if not has_auth:
                     missing_auth_files.append(file_path)
@@ -126,7 +185,8 @@ def scan_directory(directory, output_file):
                     if sensitive_functions:
                         vulnerable_files.append({
                             'file_path': file_path,
-                            'sensitive_functions': sensitive_functions
+                            'sensitive_functions': sensitive_functions,
+                            'additional_conditions': additional_conditions
                         })
                         print(f"  ⚠️  高危文件（含敏感函数）: {file_path}")
 
@@ -139,6 +199,16 @@ def scan_directory(directory, output_file):
             f.write(f"总计PHP文件数: {total_php_files}\n")
             f.write(f"缺少鉴权脚本的文件数: {len(missing_auth_files)}\n")
             f.write(f"高危文件数（缺少鉴权且含敏感函数）: {len(vulnerable_files)}\n")
+
+            # 显示额外条件配置
+            f.write("额外检测条件:\n")
+            for condition_name, condition_items in ADDITIONAL_CONDITIONS.items():
+                if condition_items:
+                    f.write(f"  {condition_name}: {', '.join(condition_items)} (必须同时满足)\n")
+                else:
+                    f.write(f"  {condition_name}: 关闭\n")
+            if not any(ADDITIONAL_CONDITIONS.values()):
+                f.write("  无额外条件 (只检测敏感函数)\n")
             f.write("=" * 60 + "\n\n")
 
             # 1. 所有缺少鉴权的文件
@@ -157,7 +227,23 @@ def scan_directory(directory, output_file):
                     f.write(f"\n文件: {vuln_file['file_path']}\n")
                     f.write("发现的敏感函数:\n")
                     for category, functions in vuln_file['sensitive_functions'].items():
-                        f.write(f"  [{category}]: {', '.join(functions)}\n")
+                        f.write(f"  [{category}]:\n")
+                        for func_info in functions:
+                            f.write(f"    函数: {func_info['function']}\n")
+                            for occurrence in func_info['occurrences']:
+                                f.write(f"      行 {occurrence['line_number']}: {occurrence['code']}\n")
+                            f.write("\n")
+
+                    # 显示满足的额外条件
+                    if vuln_file.get('additional_conditions'):
+                        f.write("满足的额外条件:\n")
+                        for condition_name, condition_items in vuln_file['additional_conditions'].items():
+                            f.write(f"  [{condition_name}]:\n")
+                            for item_info in condition_items:
+                                f.write(f"    项目: {item_info['item']}\n")
+                                for occurrence in item_info['occurrences']:
+                                    f.write(f"      行 {occurrence['line_number']}: {occurrence['code']}\n")
+                                f.write("\n")
                 f.write("\n")
 
             if not missing_auth_files:
@@ -176,33 +262,33 @@ def main():
     """主函数"""
     print("PHP鉴权脚本和敏感函数检测工具")
     print("=" * 40)
-    
+
     # 获取用户输入的目录
     while True:
         target_dir = input("请输入要检测的目录路径: ").strip()
-        
+
         if not target_dir:
             print("目录路径不能为空，请重新输入。")
             continue
-            
+
         if not os.path.exists(target_dir):
             print(f"目录 '{target_dir}' 不存在，请检查路径是否正确。")
             continue
-            
+
         if not os.path.isdir(target_dir):
             print(f"'{target_dir}' 不是一个目录，请输入正确的目录路径。")
             continue
-            
+
         break
-    
+
     # 设置输出文件名
     output_file = "auth_check_report.txt"
-    
+
     # 询问是否自定义输出文件名
     custom_output = input(f"输出文件名 (默认: {output_file}): ").strip()
     if custom_output:
         output_file = custom_output
-    
+
     # 开始扫描
     try:
         scan_directory(target_dir, output_file)
